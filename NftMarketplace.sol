@@ -39,7 +39,6 @@ contract NftMarketplace is ReentrancyGuard {
     uint256 price
   );
 
-
 //State variables
   mapping (uint => NFT) uintNFT;
   mapping (address => uintNFT)  NFTs;
@@ -96,8 +95,11 @@ function cancelListing(address nftContractAddress, uint256 tokenId)
   emit ItemCanceled(msg.sender, nftContractAddress, tokenId);
   }
 
-function buyItem(address nftContractAddress, uint256 tokenId) {
-  //To be constructed...
+function priceNotMet(address nftContractAddress, uint256 tokenId, NFT listedNFT, uint msg_value){
+  require(NFTs[nftContractAddress][tokenId]> msg_value, "Insufficient balance, price not met !");
+}
+
+function buyItem(address nftContractAddress, uint256 tokenId) payable isListed(nftContractAddress, tokenId)  {
   require(msg.value >= nft.price, revert priceNotMet(nftContractAddress,tokenId, listedNFT.price));
   address payable buyer = payable(msg.sender);
 
