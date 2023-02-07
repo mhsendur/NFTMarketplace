@@ -60,7 +60,7 @@ contract NftMarketplace is ReentrancyGuard {
   _; 
   }
 
-    modifier isOwner(address nftContractAddress, uint tokenId, address spender) {
+   modifier isOwner(address nftContractAddress, uint tokenId, address spender) {
         IERC721 nft = IERC721(nftContractAddress);
         address owner = nft.ownerOf(tokenId);
 
@@ -103,7 +103,12 @@ function buyItem(address nftContractAddress, uint256 tokenId) {
 
 }
 
-function updateListing(address nftContractAddress, uint256 tokenId, uint256 newPrice) {}
+function updateListing(address nftContractAddress, uint256 tokenId, uint256 newPrice)  
+  isOwner( nftContractAddress,  tokenId, msg.sender)
+  isListed( nftContractAddress,  tokenId){
+  NFT memory nft =  NFTs[nftContractAddress][tokenId];
+  nft.price = newPrice ; 
+}
 
 function withdrawProceeds() {}
 
