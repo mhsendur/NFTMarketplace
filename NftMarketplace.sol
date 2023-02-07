@@ -66,6 +66,9 @@ contract NftMarketplace is ReentrancyGuard {
       require((spender == owner), "Spender is not the owner");    
     _;
     }  
+  modifier priceNotMet(address nftContractAddress, uint256 tokenId, uint msg_value){
+  require(NFTs[nftContractAddress][tokenId].price > msg_value, "Insufficient balance, price not met !");
+}
 
 
 //Functions
@@ -95,14 +98,14 @@ function cancelListing(address nftContractAddress, uint256 tokenId)
   emit ItemCanceled(msg.sender, nftContractAddress, tokenId);
   }
 
-function priceNotMet(address nftContractAddress, uint256 tokenId, NFT listedNFT, uint msg_value){
-  require(NFTs[nftContractAddress][tokenId]> msg_value, "Insufficient balance, price not met !");
-}
-
-function buyItem(address nftContractAddress, uint256 tokenId) payable isListed(nftContractAddress, tokenId)  {
-  require(msg.value >= nft.price, revert priceNotMet(nftContractAddress,tokenId, listedNFT.price));
-  address payable buyer = payable(msg.sender);
-
+function buyItem(address nftContractAddress, uint256 tokenId) payable 
+ isListed(nftContractAddress, tokenId)
+ priceNotMet( nftContractAddress,  tokenId,  msg.value)  {
+  NFTs[nftContractAddress][tokenId].sold = true;
+  NFTs[nftContractAddress][tokenId].transferFrom((NFTs[nftContractAddress][tokenId].owner),msg.sender, tokenId);
+  NFTs[nftContractAddress][tokenId].seller.transfer(NFTs[nftContractAddress][tokenId].price);
+  NFTs[nftContractAddress][tokenId].owner = msg.sender;
+  emit NFTBought(nftContractAddress, tokenId, owner, seller, price);
 }
 
 function updateListing(address nftContractAddress, uint256 tokenId, uint256 newPrice)  
