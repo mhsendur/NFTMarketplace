@@ -68,6 +68,7 @@ contract NftMarketplace is ReentrancyGuard {
     }  
   modifier priceNotMet(address nftContractAddress, uint256 tokenId, uint msg_value){
   require(NFTs[nftContractAddress][tokenId].price > msg_value, "Insufficient balance, price not met !");
+_;
 }
 
 
@@ -98,7 +99,7 @@ function cancelListing(address nftContractAddress, uint256 tokenId)
   emit ItemCanceled(msg.sender, nftContractAddress, tokenId);
   }
 
-function buyItem(address nftContractAddress, uint256 tokenId) payable 
+function buyItem(address nftContractAddress, uint256 tokenId) external payable 
  isListed(nftContractAddress, tokenId)
  priceNotMet( nftContractAddress,  tokenId,  msg.value)  {
   NFTs[nftContractAddress][tokenId].sold = true;
@@ -110,20 +111,21 @@ function buyItem(address nftContractAddress, uint256 tokenId) payable
   
 }
 
-function updateListing(address nftContractAddress, uint256 tokenId, uint256 newPrice)  
+function updateListing(address nftContractAddress, uint256 tokenId, uint256 newPrice) external 
   isOwner( nftContractAddress,  tokenId, msg.sender)
   isListed( nftContractAddress,  tokenId){
   NFT memory nft =  NFTs[nftContractAddress][tokenId];
-  nft.price = newPrice ; 
+  if(newPrice != 0){
+  nft.price = newPrice;}
 }
 
-function withdrawProceeds() {
+function withdrawProceeds() external {
   require(proceeds[msg.sender]>0, "Insufficient balance ");
   msg.sender.transfer(proceeds[msg.sender]); 
   proceeds[msg.sender] = 0 ; 
 }
 
-function getPrice(address nftContractAddress, uint256 tokenId) {
+function getPrice(address nftContractAddress, uint256 tokenId) external {
  return NFTs[nftContractAddress][tokenId].price; 
 }
 
