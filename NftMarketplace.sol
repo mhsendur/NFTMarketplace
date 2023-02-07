@@ -117,7 +117,7 @@ function updateListing(address nftContractAddress, uint256 tokenId, uint256 newP
   nft.price = newPrice ; 
 }
 
-function withdrawProceeds( ) {
+function withdrawProceeds() {
   require(proceeds[msg.sender]>0, "Insufficient balance ");
   msg.sender.transfer(proceeds[msg.sender]); 
   proceeds[msg.sender] = 0 ; 
