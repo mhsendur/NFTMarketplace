@@ -79,7 +79,7 @@ function listItem (address nftContractAddress, uint256 tokenId, uint256 price)
           //Emitting the listedNFT event.
           ERC721 nft = IERC721(nftContractAddress);
           
-          require(nft.getApproved(tokenId) == address(this), "Not Approved For Marketplace") 
+          require(nft.getApproved(tokenId) == address(this), "Not Approved For Marketplace") ;
           
           NFTs[nftContractAddress][tokenId] = NFT(price, msg.sender);
           emit NFTListed (msg.sender, nftContractAddress, tokenId, price);
@@ -110,7 +110,11 @@ function updateListing(address nftContractAddress, uint256 tokenId, uint256 newP
   nft.price = newPrice ; 
 }
 
-function withdrawProceeds() {}
+function withdrawProceeds( ) {
+  require(proceeds[msg.sender]>0, "Insufficient balance ");
+  msg.sender.transfer(proceeds[msg.sender]); 
+  proceeds[msg.sender] = 0 ; 
+}
 
 function getPrice(address nftContractAddress, uint256 tokenId) {
  return NFTs[nftContractAddress][tokenId].price; 
