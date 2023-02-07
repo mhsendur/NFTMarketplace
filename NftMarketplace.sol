@@ -112,6 +112,8 @@ function updateListing(address nftContractAddress, uint256 tokenId, uint256 newP
 
 function withdrawProceeds() {}
 
-function getListing(address nftContractAddress, uint256 tokenId) {}
+function getPrice(address nftContractAddress, uint256 tokenId) {
+ return NFTs[nftContractAddress][tokenId].price; 
+}
 
 }
