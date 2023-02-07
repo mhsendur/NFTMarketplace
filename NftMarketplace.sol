@@ -106,6 +106,8 @@ function buyItem(address nftContractAddress, uint256 tokenId) payable
   NFTs[nftContractAddress][tokenId].seller.transfer(NFTs[nftContractAddress][tokenId].price);
   NFTs[nftContractAddress][tokenId].owner = msg.sender;
   emit NFTBought(nftContractAddress, tokenId, owner, seller, price);
+
+  
 }
 
 function updateListing(address nftContractAddress, uint256 tokenId, uint256 newPrice)  
