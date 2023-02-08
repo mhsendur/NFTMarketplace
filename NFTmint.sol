@@ -25,16 +25,6 @@ contract NFTLazyMint is EIP712, AccessControl {
         _setupRole(BURNER_ROLE, burner);
     }
 
-    function createVoucher(uint256 tokenId, string uri, uint256 minPrice) public returns (NFTVoucher, bytes) {
-        NFTVoucher memory voucher = {tokenId, minPrice, uri};
-
-        bytes32 domain = _signingDomain();
-        bytes32[2] memory value = [keccak256("NFTVoucher"), voucher];
-        bytes memory signature = sign(domain, keccak256(abi.encodePacked(value)));
-
-        return (voucher, signature);
-    }
-
     function redeem(address redeemer, NFTVoucher memory voucher, bytes memory signature) public payable {
         address signer = recoverSigner(voucher, signature);
 
@@ -48,6 +38,10 @@ contract NFTLazyMint is EIP712, AccessControl {
             _transfer(signer, redeemer, voucher.tokenId);
         }
     }
+
+
+
+
 
     function burn(uint256 tokenId) public {
         require(hasRole(BURNER_ROLE, msg.sender), "Caller is not a burner");
