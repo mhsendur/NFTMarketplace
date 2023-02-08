@@ -41,12 +41,28 @@ contract NFTLazyMint is EIP712{
 
     const lazyminter = new LazyMinter({ myDeployedContract.address, signerForMinterAccount })
 
+    function redeem(address redeemer, NFTVoucher calldata voucher) public payable returns (uint256) {
+        // make sure signature is valid and get the address of the signer
+        address signer = _verify(voucher);
+   
+        // make sure that the signer is authorized to mint NFTs
+        require(hasRole(MINTER_ROLE, signer), "Signature invalid or unauthorized");
 
-    function mint(uint tokenId) public {
-        require(!tokens[tokenId], "Token already exists");
-        //Mint new token
-        tokens[tokenId] = true;
-    }
+        // make sure that the redeemer is paying enough to cover the buyer's cost
+        require(msg.value >= voucher.minPrice, "Insufficient funds to redeem");
+
+        // first assign the token to the signer, to establish provenance on-chain
+        _mint(signer, voucher.tokenId);
+        _setTokenURI(voucher.tokenId, voucher.uri);
+        
+        // transfer the token to the redeemer
+        _transfer(signer, redeemer, voucher.tokenId);
+
+        // record payment to signer's withdrawal balance
+        pendingWithdrawals[signer] += msg.value;
+
+        return voucher.tokenId;
+  }
 
 
 }
