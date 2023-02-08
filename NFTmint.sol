@@ -4,71 +4,53 @@ import "@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
-contract NFTLazyMint is EIP712,ERC20, AccessControl{
+contract NFTLazyMint is EIP712, AccessControl {
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     bytes32 public constant BURNER_ROLE = keccak256("BURNER_ROLE");
 
-    IERC721 NFT ; 
-    address mpadress ; 
+    IERC721 public NFT;
+    address public mpadress;
     mapping(uint => bool) private tokens;
-    address owner;
+    address public owner;
 
     struct NFTVoucher {
-    uint256 tokenId;
-    uint256 minPrice; //To allow the creator to set a price when redeem function is used, value is greater than zero.
-    string uri;
-    bytes signature; //For authorisation
+        uint256 tokenId;
+        uint256 minPrice;
+        string uri;
+        bytes signature;
     }
 
-    constructor(address minter, address burner) public ERC20("MyToken", "TKN") {
+    constructor(address minter, address burner) public {
         _setupRole(MINTER_ROLE, minter);
         _setupRole(BURNER_ROLE, burner);
     }
 
-    const lazyminter = new LazyMinter(
-        {myDeployedContract.address, signerForMinterAccount})
+    function createVoucher(uint256 tokenId, string uri, uint256 minPrice) public returns (NFTVoucher, bytes) {
+        NFTVoucher memory voucher = {tokenId, minPrice, uri};
 
-    function createVoucher(tokenId, uri, minPrice = 0) {
-    voucher = { tokenId, uri, minPrice }
-     domain = await this._signingDomain()
-    
+        bytes32 domain = _signingDomain();
+        bytes32[2] memory value = [keccak256("NFTVoucher"), voucher];
+        bytes memory signature = sign(domain, keccak256(abi.encodePacked(value)));
 
-    //Named list of all type definitions
-     const types = {
-      NFTVoucher: [
-        {name: "tokenId", type: "uint256"},
-        {name: "uri", type: "string"}, 
-        {name: "minPrice", type: "uint256"}]
+        return (voucher, signature);
     }
-    
-    //signer._signTypedData( domain , types , value ) => Signs the typed data value with types data structure for domain using the EIP-712 specification.
-    signature = await signer.signTypedData(domain, types, voucher);
-    
-    return {voucher, signature}
-  }
 
-    const lazyminter = new LazyMinter({ myDeployedContract.address, signerForMinterAccount })
+    function redeem(address redeemer, NFTVoucher memory voucher, bytes memory signature) public payable {
+        address signer = recoverSigner(voucher, signature);
 
-function redeem(address redeemer, NFTVoucher calldata voucher) public payable returns (uint256) {
+        require(hasRole(MINTER_ROLE, msg.sender), "Caller is not a minter");
+        require(signer == msg.sender, "Signer does not match msg.sender");
 
-    address signer = _verify(voucher);
+        _mint(redeemer, voucher.tokenId);
+        _setTokenURI(voucher.tokenId, voucher.uri);
 
-    require(hasRole(MINTER_ROLE, msg.sender), "Caller is not a minter");
-            _mint(to, amount);
-          
+        if (msg.value >= voucher.minPrice) {
+            _transfer(signer, redeemer, voucher.tokenId);
+        }
+    }
 
-    _mint(signer, voucher.tokenId);
-    _setTokenURI(voucher.tokenId, voucher.uri);
-    _transfer(signer, redeemer, voucher.tokenId);
-
-    pendingWithdrawals[signer] += msg.value;
-
-    return voucher.tokenId;
-  }
-  
-   /* function burn(address from, uint256 amount) public {
+    function burn(uint256 tokenId) public {
         require(hasRole(BURNER_ROLE, msg.sender), "Caller is not a burner");
-        _burn(from, amount);
+        _burn(msg.sender, tokenId);
     }
-    */
 }
