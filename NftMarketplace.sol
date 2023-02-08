@@ -107,8 +107,6 @@ function buyItem(address nftContractAddress, uint256 tokenId) external payable
   NFTs[nftContractAddress][tokenId].seller.transfer(NFTs[nftContractAddress][tokenId].price);
   NFTs[nftContractAddress][tokenId].owner = msg.sender;
   emit NFTBought(nftContractAddress, tokenId, owner, seller, price);
-
-  
 }
 
 function updateListing(address nftContractAddress, uint256 tokenId, uint256 newPrice) external 
@@ -128,5 +126,4 @@ function withdrawProceeds() external {
 function getPrice(address nftContractAddress, uint256 tokenId) external {
  return NFTs[nftContractAddress][tokenId].price; 
 }
-
 }
