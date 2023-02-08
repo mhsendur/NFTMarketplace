@@ -55,7 +55,7 @@ function redeem(address redeemer, NFTVoucher calldata voucher) public payable re
 
     require(hasRole(MINTER_ROLE, msg.sender), "Caller is not a minter");
             _mint(to, amount);
-        }    
+          
 
     _mint(signer, voucher.tokenId);
     _setTokenURI(voucher.tokenId, voucher.uri);
