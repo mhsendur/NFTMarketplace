@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.7;
 
-pragma solidity ^0.8.7;
-
 contract LazyMinting {
     uint256 public totalSupply;
 
