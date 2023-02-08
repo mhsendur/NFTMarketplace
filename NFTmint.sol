@@ -1,8 +1,12 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
-contract NFTLazyMint is EIP712{
+contract NFTLazyMint is EIP712,ERC20, AccessControl{
+    bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
+    bytes32 public constant BURNER_ROLE = keccak256("BURNER_ROLE");
 
     IERC721 NFT ; 
     address mpadress ; 
@@ -16,9 +20,13 @@ contract NFTLazyMint is EIP712{
     bytes signature; //For authorisation
     }
 
+    constructor(address minter, address burner) public ERC20("MyToken", "TKN") {
+        _setupRole(MINTER_ROLE, minter);
+        _setupRole(BURNER_ROLE, burner);
+    }
+
     const lazyminter = new LazyMinter(
-        {myDeployedContract.address,
-        signerForMinterAccount})
+        {myDeployedContract.address, signerForMinterAccount})
 
     function createVoucher(tokenId, uri, minPrice = 0) {
     voucher = { tokenId, uri, minPrice }
@@ -41,12 +49,28 @@ contract NFTLazyMint is EIP712{
 
     const lazyminter = new LazyMinter({ myDeployedContract.address, signerForMinterAccount })
 
+function redeem(address redeemer, NFTVoucher calldata voucher) public payable returns (uint256) {
 
-    function mint(uint tokenId) public {
-        require(!tokens[tokenId], "Token already exists");
-        //Mint new token
-        tokens[tokenId] = true;
+    address signer = _verify(voucher);
+
+    require(hasRole(MINTER_ROLE, msg.sender), "Caller is not a minter");
+            _mint(to, amount);
+        }    
+
+    _mint(signer, voucher.tokenId);
+    _setTokenURI(voucher.tokenId, voucher.uri);
+    _transfer(signer, redeemer, voucher.tokenId);
+
+    pendingWithdrawals[signer] += msg.value;
+
+    return voucher.tokenId;
+  }
+
+
+
+   /* function burn(address from, uint256 amount) public {
+        require(hasRole(BURNER_ROLE, msg.sender), "Caller is not a burner");
+        _burn(from, amount);
     }
-
-
+    */
 }
