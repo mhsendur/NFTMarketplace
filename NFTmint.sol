@@ -1,23 +1,52 @@
-// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.7;
+pragma solidity ^0.8.0;
 
-contract LazyMinting {
-    uint256 public totalSupply;
+import "@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol";
 
-    mapping (address => uint256) public balances;
-    mapping (address => mapping (uint256 => bool)) public minted;
+contract NFTLazyMint is EIP712{
 
-    event NewMint(address indexed _to, uint256 _tokenId);
+    IERC721 NFT ; 
+    address mpadress ; 
+    mapping(uint => bool) private tokens;
+    address owner;
 
-    function mint(address _to, uint256 _tokenId) public {
-        require(!minted[_to][_tokenId], "Token already minted");
-        minted[_to][_tokenId] = true;
-        balances[_to]++;
-        totalSupply++;
-        emit NewMint(_to, _tokenId);
+    struct NFTVoucher {
+    uint256 tokenId;
+    uint256 minPrice; //To allow the creator to set a price when redeem function is used, value is greater than zero.
+    string uri;
+    bytes signature; //For authorisation
     }
 
-    function balanceOf(address _owner) public view returns (uint256) {
-        return balances[_owner];
+    const lazyminter = new LazyMinter(
+        {myDeployedContract.address,
+        signerForMinterAccount})
+
+    function createVoucher(tokenId, uri, minPrice = 0) {
+    voucher = { tokenId, uri, minPrice }
+     domain = await this._signingDomain()
+    
+
+    //Named list of all type definitions
+     const types = {
+      NFTVoucher: [
+        {name: "tokenId", type: "uint256"},
+        {name: "uri", type: "string"}, 
+        {name: "minPrice", type: "uint256"}]
     }
+    
+    //signer._signTypedData( domain , types , value ) => Signs the typed data value with types data structure for domain using the EIP-712 specification.
+    signature = await signer.signTypedData(domain, types, voucher);
+    
+    return {voucher, signature}
+  }
+
+    const lazyminter = new LazyMinter({ myDeployedContract.address, signerForMinterAccount })
+
+
+    function mint(uint tokenId) public {
+        require(!tokens[tokenId], "Token already exists");
+        //Mint new token
+        tokens[tokenId] = true;
+    }
+
+
 }
