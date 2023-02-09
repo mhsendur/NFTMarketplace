@@ -1,4 +1,4 @@
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.7;
 
 import "@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
@@ -8,8 +8,7 @@ contract NFTLazyMint is EIP712, AccessControl {
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     bytes32 public constant BURNER_ROLE = keccak256("BURNER_ROLE");
 
-    IERC721 public NFT;
-    address public mpadress;
+
     mapping(uint => bool) private tokens;
     address public owner;
 
@@ -25,6 +24,16 @@ contract NFTLazyMint is EIP712, AccessControl {
         _setupRole(BURNER_ROLE, burner);
     }
 
+    function createVoucher(uint256 tokenId, string uri, uint256 minPrice) public returns (NFTVoucher, bytes) {
+        NFTVoucher memory voucher = {tokenId, minPrice, uri};
+
+        bytes32 domain = _signingDomain();
+        bytes32[2] memory value = [keccak256("NFTVoucher"), voucher];
+        bytes memory signature = sign(domain, keccak256(abi.encodePacked(value)));
+
+        return (voucher, signature);
+    }
+
     function redeem(address redeemer, NFTVoucher memory voucher, bytes memory signature) public payable {
         address signer = recoverSigner(voucher, signature);
 
@@ -38,10 +47,6 @@ contract NFTLazyMint is EIP712, AccessControl {
             _transfer(signer, redeemer, voucher.tokenId);
         }
     }
-
-
-
-
 
     function burn(uint256 tokenId) public {
         require(hasRole(BURNER_ROLE, msg.sender), "Caller is not a burner");
