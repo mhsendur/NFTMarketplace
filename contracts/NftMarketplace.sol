@@ -32,10 +32,9 @@ contract NftMarketplace is ReentrancyGuard {
   );
 
   event NFTBought(
-    address nftContractAddress,
-    uint256 tokenId,
-    address owner,
-    address seller,
+    address indexed nftContractAddress,
+    uint256 indexed tokenId,
+    address indexed seller,
     uint256 price
   );
 
@@ -103,27 +102,30 @@ function buyItem(address nftContractAddress, uint256 tokenId) external payable
  isListed(nftContractAddress, tokenId)
  priceNotMet( nftContractAddress,  tokenId,  msg.value)  {
  // NFTs[nftContractAddress][tokenId].sold = true;
-  NFTs[nftContractAddress][tokenId].transferFrom((NFTs[nftContractAddress][tokenId].owner),msg.sender, tokenId);
-  NFTs[nftContractAddress][tokenId].seller.transfer(NFTs[nftContractAddress][tokenId].price);
-  NFTs[nftContractAddress][tokenId].owner = msg.sender;
-  emit NFTBought(nftContractAddress, tokenId, NFT.owner, NFT.seller, NFT.price);
+ // NFTs[nftContractAddress][tokenId].transferFrom((NFTs[nftContractAddress][tokenId].owner),msg.sender, tokenId);
+ // NFTs[nftContractAddress][tokenId].seller.transfer(NFTs[nftContractAddress][tokenId].price);
+ // NFTs[nftContractAddress][tokenId].owner = msg.sender;
+    NFT memory nft =  NFTs[nftContractAddress][tokenId];
+    proceeds[nft.seller] += msg.value;
+  
+  emit NFTBought(nftContractAddress, tokenId, nft.seller, nft.price);
 }
 
 function updateListing(address nftContractAddress, uint256 tokenId, uint256 newPrice) external 
   isOwner( nftContractAddress,  tokenId, msg.sender)
-  isListed( nftContractAddress,  tokenId){
+  isListed( nftContractAddress,  tokenId) nonReentrant{
   NFT memory nft =  NFTs[nftContractAddress][tokenId];
   if(newPrice != 0){
   nft.price = newPrice;}
 }
-
+/*
 function withdrawProceeds() external {
   require(proceeds[msg.sender]>0, "Insufficient balance ");
-  msg.sender.transfer(proceeds[msg.sender]); 
+  payable(msg.sender.call{value: proceeds}(); 
   proceeds[msg.sender] = 0 ; 
 }
 
 function getPrice(address nftContractAddress, uint256 tokenId) external {
  return NFTs[nftContractAddress][tokenId].price; 
-}
+}*/
 }
