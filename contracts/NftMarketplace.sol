@@ -1,34 +1,34 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
+import "hardhat/console.sol";
+import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 contract NftMarketplace is ReentrancyGuard {
   struct NFT {
-    address nftContractAddress; //Refers to the address location of the smart contract that manages the logic for the token.
-    uint256 tokenId; //A unique instance of the smart contract.
+    //address nftContractAddress; //Refers to the address location of the smart contract that manages the logic for the token.
+    //uint256 tokenId; //A unique instance of the smart contract.
     uint256 price;
-    address payable seller;
-    address payable owner;
-    bool listed;
-    bool sold;
+    address seller;
+    //address payable owner;
+    //bool listed;
+    //bool sold;
   }
 
   event NFTListed(
-    address nftContractAddress,
+    address indexed nftContractAddress,
     uint256 indexed tokenId,
-    address seller,
-    address owner,
+    address indexed seller,
     uint256 price
   );
 
   event NFTCancelled(
-    address nftContractAddress,
-    uint256 tokenId,
-    address owner,
-    address seller
+    address indexed nftContractAddress,
+    uint256 indexed tokenId,
+    address indexed seller
   );
 
   event NFTBought(
@@ -41,7 +41,7 @@ contract NftMarketplace is ReentrancyGuard {
 
 //State variables
   mapping (uint => NFT) uintNFT;
-  mapping (address => uintNFT)  NFTs;
+  mapping (address => mapping(uint256 => NFT)) private  NFTs;
   mapping (address => uint256) proceeds;
 
 
@@ -80,12 +80,12 @@ function listItem (address nftContractAddress, uint256 tokenId, uint256 price)
           require(price > 0, "Price must be greater than zero");    
 
           //Emitting the listedNFT event.
-          ERC721 nft = IERC721(nftContractAddress);
+          IERC721 nft = IERC721(nftContractAddress);
           
           require(nft.getApproved(tokenId) == address(this), "Not Approved For Marketplace") ;
           
           NFTs[nftContractAddress][tokenId] = NFT(price, msg.sender);
-          emit NFTListed (msg.sender, nftContractAddress, tokenId, price);
+          emit NFTListed (nftContractAddress, tokenId, msg.sender, price);
 
         }
       
@@ -96,17 +96,17 @@ function cancelListing(address nftContractAddress, uint256 tokenId)
   delete (NFTs[nftContractAddress][tokenId]);
 
   //After the deletion the event is emitted.
-  emit ItemCanceled(msg.sender, nftContractAddress, tokenId);
+  emit NFTCancelled(nftContractAddress, tokenId, msg.sender);
   }
 
 function buyItem(address nftContractAddress, uint256 tokenId) external payable 
  isListed(nftContractAddress, tokenId)
  priceNotMet( nftContractAddress,  tokenId,  msg.value)  {
-  NFTs[nftContractAddress][tokenId].sold = true;
+ // NFTs[nftContractAddress][tokenId].sold = true;
   NFTs[nftContractAddress][tokenId].transferFrom((NFTs[nftContractAddress][tokenId].owner),msg.sender, tokenId);
   NFTs[nftContractAddress][tokenId].seller.transfer(NFTs[nftContractAddress][tokenId].price);
   NFTs[nftContractAddress][tokenId].owner = msg.sender;
-  emit NFTBought(nftContractAddress, tokenId, owner, seller, price);
+  emit NFTBought(nftContractAddress, tokenId, NFT.owner, NFT.seller, NFT.price);
 }
 
 function updateListing(address nftContractAddress, uint256 tokenId, uint256 newPrice) external 
