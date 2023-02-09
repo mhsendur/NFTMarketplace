@@ -70,7 +70,7 @@ constructor(address payable minter)
     }
      
     function redeem(address redeemer, NFTVoucher calldata voucher, bytes memory signature) public payable returns (uint256) {
-        address signer = recoverSigner(voucher, signature);
+        address signer = _verify(voucher, signature);
 
         require(hasRole(MINTER_ROLE, msg.sender), "Invalid signer");
         require(signer == msg.sender, "Signer does not match msg.sender");
@@ -84,15 +84,28 @@ constructor(address payable minter)
         return voucher.tokenId;
     }
 
-  
+    function _hash(NFTVoucher calldata voucher) public view returns (bytes32) {
+        
+        return _hashTypedDataV4(keccak256(abi.encode(
+        keccak256("NFTVoucher(uint256 tokenId,uint256 minPrice,string uri)"),
+        voucher.tokenId,
+        voucher.minPrice,
+        keccak256(bytes(voucher.uri))
+        )));
+    }
 
-    function canWithdraw() public view returns (uint256)  {
-    return pendingWithdrawals[msg.sender];
-  }
+    function _verify(NFTVoucher calldata voucher, bytes memory signature) public view returns (address) {
+        bytes32 digest = _hash(voucher);
+        return digest.toEthSignedMessageHash().recover(signature);
+    }
 
-  function supportsInterface(bytes4 interfaceId) public view virtual override (AccessControl, ERC721) returns (bool) {
-    return ERC721.supportsInterface(interfaceId) || AccessControl.supportsInterface(interfaceId);
-  }
+    function canWithdraw() public view returns (uint256) {
+        return pendingWithdrawals[msg.sender];
+    }
+
+    function supportsInterface(bytes4 interfaceId) public view virtual override (AccessControl, ERC721) returns (bool) {
+        return ERC721.supportsInterface(interfaceId) || AccessControl.supportsInterface(interfaceId);
+    }
 
 
 
