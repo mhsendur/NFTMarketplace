@@ -11,7 +11,8 @@ contract NftMarketplace is ReentrancyGuard {
   using Counters for Counters.Counter;
   Counters.Counter private _tokenIds;
   Counters.Counter private _itemsSold;
-
+  Counters.Counter private _tokenId;
+   
   struct NFT {
     //address nftContractAddress; //Refers to the address location of the smart contract that manages the logic for the token.
     //uint256 tokenId; //A unique instance of the smart contract.
