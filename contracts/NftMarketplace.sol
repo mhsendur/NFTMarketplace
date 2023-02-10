@@ -102,7 +102,7 @@ function cancelListing(address nftContractAddress, uint256 tokenId)
   emit NFTCancelled(nftContractAddress, tokenId, msg.sender);
   }
 
-function buyItem(address nftContractAddress, uint256 tokenId) external payable 
+function buyNFT(address nftContractAddress, uint256 tokenId) external payable 
  isListed(nftContractAddress, tokenId)
  priceNotMet( nftContractAddress,  tokenId,  msg.value)  {
  // NFTs[nftContractAddress][tokenId].sold = true;
