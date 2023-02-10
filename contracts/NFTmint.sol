@@ -26,6 +26,8 @@ contract NFTLazyMint is EIP712, AccessControl, ERC721URIStorage {
         uint256 tokenId;
         uint256 minPrice;
         string uri;
+        bytes signature;
+
     }
 
 constructor(address payable minter)
